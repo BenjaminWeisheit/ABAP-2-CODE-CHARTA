@@ -1,0 +1,14 @@
+CLASS zcx_i_metrics_implement_error DEFINITION
+  PUBLIC
+  FINAL
+  CREATE PUBLIC INHERITING FROM cx_static_check.
+
+  PUBLIC SECTION.
+  PROTECTED SECTION.
+  PRIVATE SECTION.
+ENDCLASS.
+
+
+
+CLASS zcx_i_metrics_implement_error IMPLEMENTATION.
+ENDCLASS.

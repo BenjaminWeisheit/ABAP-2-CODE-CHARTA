@@ -38,7 +38,7 @@ CLASS lcl_code_metrics DEFINITION.
     METHODS set_alv_runtime_info.
     METHODS submit_code_metrics_report
       IMPORTING
-        i_selection_variant TYPE variant.
+        selection_variant TYPE variant.
     METHODS get_alv_list_from_report
       RETURNING
         VALUE(r_result) TYPE ztti_code_metrics
@@ -63,7 +63,7 @@ CLASS lcl_code_metrics IMPLEMENTATION.
 
   METHOD submit_code_metrics_report.
     SUBMIT /sdf/cd_custom_code_metric
-    USING SELECTION-SET i_selection_variant
+    USING SELECTION-SET selection_variant
     EXPORTING LIST TO MEMORY
     AND RETURN.
   ENDMETHOD.
@@ -80,8 +80,8 @@ CLASS lcl_file_output DEFINITION.
   PUBLIC SECTION.
     METHODS write_file
       IMPORTING
-        file_name TYPE localfile
-        json      TYPE string.
+        VALUE(file_name) TYPE localfile
+        json             TYPE string.
   PRIVATE SECTION.
     METHODS convert_string_to_xstring
       IMPORTING
@@ -92,32 +92,41 @@ CLASS lcl_file_output DEFINITION.
       IMPORTING
         file_name TYPE localfile
         xstring   TYPE xstring.
+    METHODS adjust_filename
+      IMPORTING
+        file_name     TYPE localfile
+      RETURNING
+        VALUE(result) TYPE localfile.
 ENDCLASS.
 
 CLASS lcl_file_output IMPLEMENTATION.
   METHOD write_file.
-    DATA(json_as_xstring) = convert_string_to_xstring( json ).
     write_xstring_to_file(
-        file_name = file_name
-        xstring   = json_as_xstring ).
+        file_name = adjust_filename( file_name )
+        xstring   = convert_string_to_xstring( json ) ).
   ENDMETHOD.
   METHOD write_xstring_to_file.
     OPEN DATASET file_name FOR OUTPUT IN BINARY MODE.
     IF sy-subrc NE 0.
       WRITE : / 'Error Opening the Server Filepath :', file_name.
     ELSE.
+      TRANSFER xstring TO file_name.
+      CLOSE DATASET file_name.
       WRITE : / 'File Downloaded to the Server at :', file_name.
     ENDIF.
-
-    TRANSFER xstring TO file_name.
-    CLOSE DATASET file_name.
   ENDMETHOD.
+
   METHOD convert_string_to_xstring.
     CALL FUNCTION 'SCMS_STRING_TO_XSTRING'
       EXPORTING
         text   = string
       IMPORTING
         buffer = result.
+  ENDMETHOD.
+
+  METHOD adjust_filename.
+    result = file_name.
+    REPLACE ALL OCCURRENCES OF '<DATE>' IN result WITH sy-datum.
   ENDMETHOD.
 ENDCLASS.
 
@@ -126,6 +135,6 @@ START-OF-SELECTION.
   PARAMETERS p_file TYPE localfile.
 
   DATA(code_metrics) = NEW lcl_code_metrics( )->run( p_varnt ).
-  DATA(json) = NEW zcl_i_metrics_to_json( )->to_json( code_metrics ).
-  new lcl_file_output( )->write_file( file_name = p_file
+  DATA(json) = NEW zcl_i_metrics_2_json( )->to_json( code_metrics ).
+  NEW lcl_file_output( )->write_file( file_name = p_file
                                       json      = json ).
