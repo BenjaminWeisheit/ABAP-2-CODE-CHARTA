@@ -3,14 +3,14 @@
  <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
   <asx:values>
    <VSEOCLASS>
-    <CLSNAME>ZCL_I_WHERE_USED_PROVIDER</CLSNAME>
-    <LANGU>D</LANGU>
-    <DESCRIPT>Usage Provider</DESCRIPT>
+    <CLSNAME>ZCX_I_A2CC_METRICS_IMPL_ERROR</CLSNAME>
+    <LANGU>E</LANGU>
+    <DESCRIPT>Implementation error</DESCRIPT>
+    <CATEGORY>40</CATEGORY>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>
     <UNICODE>X</UNICODE>
-    <WITH_UNIT_TESTS>X</WITH_UNIT_TESTS>
    </VSEOCLASS>
   </asx:values>
  </asx:abap>

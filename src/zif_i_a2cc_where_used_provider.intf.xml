@@ -3,9 +3,9 @@
  <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
   <asx:values>
    <VSEOINTERF>
-    <CLSNAME>ZIF_I_WHERE_USED</CLSNAME>
-    <LANGU>D</LANGU>
-    <DESCRIPT>Get Where Used</DESCRIPT>
+    <CLSNAME>ZIF_I_A2CC_WHERE_USED_PROVIDER</CLSNAME>
+    <LANGU>E</LANGU>
+    <DESCRIPT>Where used provider</DESCRIPT>
     <EXPOSURE>2</EXPOSURE>
     <STATE>1</STATE>
     <UNICODE>X</UNICODE>

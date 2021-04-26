@@ -1,4 +1,4 @@
-CLASS zcx_i_metrics_implement_error DEFINITION
+CLASS zcx_i_a2cc_metrics_impl_error DEFINITION
   PUBLIC
   FINAL
   CREATE PUBLIC INHERITING FROM cx_static_check.
@@ -10,5 +10,5 @@ ENDCLASS.
 
 
 
-CLASS zcx_i_metrics_implement_error IMPLEMENTATION.
+CLASS zcx_i_a2cc_metrics_impl_error IMPLEMENTATION.
 ENDCLASS.

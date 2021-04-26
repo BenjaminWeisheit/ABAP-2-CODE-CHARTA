@@ -23,7 +23,7 @@
 *OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 *SOFTWARE.
 
-REPORT zi_metrics_to_codecharta.
+REPORT zi_abap_to_codecharta.
 
 CLASS lcl_code_metrics DEFINITION.
   PUBLIC SECTION.
@@ -31,7 +31,7 @@ CLASS lcl_code_metrics DEFINITION.
       IMPORTING
         selection_variant TYPE variant
       RETURNING
-        VALUE(result)     TYPE ztti_code_metrics
+        VALUE(result)     TYPE ztti_a2cc_code_metrics
       RAISING
         cx_salv_bs_sc_runtime_info.
   PRIVATE SECTION.
@@ -41,7 +41,7 @@ CLASS lcl_code_metrics DEFINITION.
         selection_variant TYPE variant.
     METHODS get_alv_list_from_report
       RETURNING
-        VALUE(r_result) TYPE ztti_code_metrics
+        VALUE(result) TYPE ztti_a2cc_code_metrics
       RAISING
         cx_salv_bs_sc_runtime_info.
 ENDCLASS.
@@ -58,7 +58,7 @@ CLASS lcl_code_metrics IMPLEMENTATION.
     DATA alv_list              TYPE REF TO data.
     cl_salv_bs_runtime_info=>get_data_ref( IMPORTING r_data = alv_list ).
     ASSIGN alv_list->* TO <alv_list>.
-    MOVE-CORRESPONDING <alv_list> TO r_result.
+    MOVE-CORRESPONDING <alv_list> TO result.
   ENDMETHOD.
 
   METHOD submit_code_metrics_report.
@@ -135,6 +135,6 @@ START-OF-SELECTION.
   PARAMETERS p_file TYPE localfile.
 
   DATA(code_metrics) = NEW lcl_code_metrics( )->run( p_varnt ).
-  DATA(json) = NEW zcl_i_metrics_2_json( )->to_json( code_metrics ).
+  DATA(json) = NEW zcl_i_A2CC_metrics_2_json( )->to_json( code_metrics ).
   NEW lcl_file_output( )->write_file( file_name = p_file
                                       json      = json ).

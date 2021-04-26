@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<abapGit version="v1.0.0" serializer="LCL_OBJECT_DTEL" serializer_version="v1.0.0">
+ <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
+  <asx:values>
+   <DD04V>
+    <ROLLNAME>ZEI_A2CC_OBJECT_ID</ROLLNAME>
+    <DDLANGUAGE>D</DDLANGUAGE>
+    <DOMNAME>CHAR61</DOMNAME>
+    <HEADLEN>16</HEADLEN>
+    <SCRLEN1>08</SCRLEN1>
+    <SCRLEN2>08</SCRLEN2>
+    <SCRLEN3>16</SCRLEN3>
+    <DDTEXT>Zeichenfeld Länge 61</DDTEXT>
+    <REPTEXT>Zeichenfeld</REPTEXT>
+    <SCRTEXT_S>Zeich61</SCRTEXT_S>
+    <SCRTEXT_M>Zeich61</SCRTEXT_M>
+    <SCRTEXT_L>Zeichenfeld</SCRTEXT_L>
+    <DTELMASTER>E</DTELMASTER>
+    <REFKIND>D</REFKIND>
+   </DD04V>
+  </asx:values>
+ </asx:abap>
+</abapGit>
