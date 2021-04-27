@@ -4,22 +4,18 @@ CLASS zcl_i_a2cc_where_used_abstract DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-    INTERFACES zif_i_A2CC_where_used.
+    INTERFACES zif_i_a2cc_where_used.
     METHODS constructor
-      IMPORTING objecttype TYPE zif_i_A2CC_where_used_provider=>objecttype.
+      IMPORTING objecttype TYPE zif_i_a2cc_where_used_provider=>objecttype.
   PROTECTED SECTION.
-    DATA objecttype TYPE zif_i_A2CC_where_used_provider=>objecttype.
+    DATA objecttype TYPE zif_i_a2cc_where_used_provider=>objecttype.
     METHODS get_where_used_list_from_cross
       IMPORTING
         object        TYPE string
       RETURNING
-        VALUE(result) TYPE REF TO zif_i_A2CC_where_used~object_list.
+        VALUE(result) TYPE REF TO zif_i_a2cc_where_used~object_list.
   PRIVATE SECTION.
-    METHODS get_classname_from_include
-      IMPORTING
-        include       TYPE  programm
-      RETURNING
-        VALUE(result) TYPE classname.
+
     METHODS get_enclosing_object
       IMPORTING
         found_object  TYPE REF TO rsfindlst
@@ -27,10 +23,38 @@ CLASS zcl_i_a2cc_where_used_abstract DEFINITION
         VALUE(result) TYPE rsobject.
 ENDCLASS.
 
-CLASS zcl_i_a2cc_where_used_abstract IMPLEMENTATION.
-  METHOD zif_i_A2CC_where_used~get_cross_references.
 
+
+CLASS ZCL_I_A2CC_WHERE_USED_ABSTRACT IMPLEMENTATION.
+
+
+  METHOD constructor.
+    me->objecttype = objecttype.
   ENDMETHOD.
+
+
+  METHOD get_enclosing_object.
+    DATA group  TYPE rs38l_area.
+    DATA include  TYPE progname.
+
+    include = found_object->object.
+    CALL FUNCTION 'FUNCTION_INCLUDE_SPLIT'
+      IMPORTING
+        group   = group
+      CHANGING
+        include = include
+      EXCEPTIONS
+        OTHERS  = 6.
+    IF sy-subrc = 0 AND group IS NOT INITIAL.
+      result = |SAPL{ group }|.
+    ELSE.
+      SELECT SINGLE master FROM d010inc INTO result WHERE include = include.
+      IF sy-subrc <> 0.
+        result = include.
+      ENDIF.
+    ENDIF.
+  ENDMETHOD.
+
 
   METHOD get_where_used_list_from_cross.
     DATA: findstrings    TYPE TABLE OF rsfind,
@@ -62,39 +86,20 @@ CLASS zcl_i_a2cc_where_used_abstract IMPLEMENTATION.
     IF sy-subrc IS INITIAL.
       result = NEW #( ).
       LOOP AT found_objects REFERENCE INTO DATA(found_object).
-        INSERT COND #( WHEN found_object->encl_objec IS NOT INITIAL THEN found_object->encl_objec
-                       ELSE get_enclosing_object( found_object ) ) INTO TABLE result->*.
+        DATA(where_used_reference) = COND rsobject( WHEN found_object->encl_objec IS NOT INITIAL THEN found_object->encl_objec
+                                                    ELSE get_enclosing_object( found_object ) ).
+        IF line_exists( result->*[ depending_object = where_used_reference ] ).
+          ASSIGN result->*[ depending_object = where_used_reference ] TO FIELD-SYMBOL(<reference>).
+          <reference>-number_of_usages = <reference>-number_of_usages + 1.
+        ELSE.
+          INSERT VALUE #( depending_object = where_used_reference number_of_usages = 1 ) INTO TABLE result->*.
+        ENDIF.      .
       ENDLOOP.
     ENDIF.
   ENDMETHOD.
 
-  METHOD get_classname_from_include.
-    result = cl_oo_classname_service=>get_clsname_by_include( include ).
-  ENDMETHOD.
 
-  METHOD constructor.
-    me->objecttype = objecttype.
-  ENDMETHOD.
+  METHOD zif_i_a2cc_where_used~get_cross_references.
 
-  METHOD get_enclosing_object.
-    DATA group  TYPE rs38l_area.
-    DATA include  TYPE progname.
-
-    include = found_object->object.
-    CALL FUNCTION 'FUNCTION_INCLUDE_SPLIT'
-      IMPORTING
-        group   = group
-      CHANGING
-        include = include
-      EXCEPTIONS
-        OTHERS  = 6.
-    IF sy-subrc = 0 AND group IS NOT INITIAL.
-      result = |SAPL{ group }|.
-    ELSE.
-      SELECT SINGLE master FROM d010inc INTO result WHERE include = include.
-      IF sy-subrc <> 0.
-        result = include.
-      ENDIF.
-    ENDIF.
   ENDMETHOD.
 ENDCLASS.

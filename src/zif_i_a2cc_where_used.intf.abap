@@ -1,7 +1,14 @@
 INTERFACE zif_i_a2cc_where_used
   PUBLIC .
   TYPES object_identifier TYPE string.
-  TYPES object_list TYPE HASHED TABLE OF object_identifier WITH UNIQUE DEFAULT KEY.
+
+    TYPES: BEGIN OF depending_object,
+           depending_object  TYPE object_identifier,
+           number_of_usages  type i,
+           cycle             type i,
+         END OF depending_object.
+
+  TYPES object_list TYPE HASHED TABLE OF depending_object WITH UNIQUE DEFAULT KEY.
   TYPES: BEGIN OF object_usages,
            object_identifier TYPE object_identifier,
            references        TYPE object_list,

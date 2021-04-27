@@ -14,14 +14,26 @@
    <TPOOL>
     <item>
      <ID>S</ID>
-     <KEY>P_FILE</KEY>
+     <KEY>CYCLS</KEY>
+     <ENTRY>Zyklische Abhängigkeit. darst.</ENTRY>
+     <LENGTH>38</LENGTH>
+    </item>
+    <item>
+     <ID>S</ID>
+     <KEY>DPNDNCY</KEY>
+     <ENTRY>Abhängigkeiten darstellen</ENTRY>
+     <LENGTH>38</LENGTH>
+    </item>
+    <item>
+     <ID>S</ID>
+     <KEY>FILE</KEY>
      <ENTRY>.</ENTRY>
      <LENGTH>9</LENGTH>
      <SPLIT>D</SPLIT>
     </item>
     <item>
      <ID>S</ID>
-     <KEY>P_VARNT</KEY>
+     <KEY>VARNT</KEY>
      <ENTRY>.</ENTRY>
      <LENGTH>9</LENGTH>
      <SPLIT>D</SPLIT>

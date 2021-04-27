@@ -131,10 +131,14 @@ CLASS lcl_file_output IMPLEMENTATION.
 ENDCLASS.
 
 START-OF-SELECTION.
-  PARAMETERS p_varnt TYPE variant.
-  PARAMETERS p_file TYPE localfile.
+  PARAMETERS varnt TYPE variant.
+  PARAMETERS file TYPE localfile.
+  PARAMETERS dpndncy TYPE abap_bool AS CHECKBOX.
+  PARAMETERS cycls TYPE abap_bool AS CHECKBOX.
 
-  DATA(code_metrics) = NEW lcl_code_metrics( )->run( p_varnt ).
-  DATA(json) = NEW zcl_i_A2CC_metrics_2_json( )->to_json( code_metrics ).
-  NEW lcl_file_output( )->write_file( file_name = p_file
+  DATA(code_metrics) = NEW lcl_code_metrics( )->run( varnt ).
+  DATA(json) = NEW zcl_i_a2cc_metrics_2_json( )->to_json( metrics               = code_metrics
+                                                          analyze_dependecies   = dpndncy
+                                                          analyze_direct_cycles = cycls ).
+  NEW lcl_file_output( )->write_file( file_name = file
                                       json      = json ).
