@@ -106,7 +106,28 @@ data package_analyzer type ref to ZIF_I_A2CC_PACKAGE_ANALYZER.
           metric_aggregator type ref to zif_i_a2cc_aggregator.
 ENDCLASS.
 
-CLASS zcl_i_a2cc_metrics_2_json IMPLEMENTATION.
+
+
+CLASS ZCL_I_A2CC_METRICS_2_JSON IMPLEMENTATION.
+
+
+  METHOD close_document.
+    json_writer->close_element( ).
+  ENDMETHOD.
+
+
+  METHOD close_edges.
+    json_writer->close_element( ).
+  ENDMETHOD.
+
+
+  METHOD close_nodes.
+    json_writer->close_element( ).
+    json_writer->close_element( ).
+    json_writer->close_element( ).
+  ENDMETHOD.
+
+
   METHOD constructor.
     json_writer =
       CAST if_sxml_writer(
@@ -116,17 +137,6 @@ CLASS zcl_i_a2cc_metrics_2_json IMPLEMENTATION.
                metric_aggregator = new Zcl_I_A2CC_AGGREGATOR( ).
   ENDMETHOD.
 
-  METHOD to_json.
-    me->analyze_dependecies = analyze_dependecies.
-    me->analyze_direct_cycles = analyze_direct_cycles.
-
-    SORT metrics.
-
-    find_object_usages( metrics ).
-    aggregated_metrics = metric_aggregator->aggregate_metrics( metrics ).
-    packages = package_analyzer->aggregate_packages( aggregated_metrics ).
-    result = convert2json( ).
-  ENDMETHOD.
 
   METHOD convert2json.
     open_document( ).
@@ -150,30 +160,41 @@ CLASS zcl_i_a2cc_metrics_2_json IMPLEMENTATION.
     result = cl_abap_codepage=>convert_from( CAST cl_sxml_string_writer( writer )->get_output( ) ).
   ENDMETHOD.
 
-  METHOD write_nodes.
-    LOOP AT packages REFERENCE INTO DATA(package)
-      WHERE parent IS INITIAL.
-      write_package( package->* ).
-    ENDLOOP.
+
+  METHOD find_object_usages.
+    dependency_analyzer = NEW zcl_i_a2cc_dependency_analyzer( analyze_dependecies = analyze_dependecies
+                                                              analyze_direct_cycles = analyze_direct_cycles ).
+    object_where_used_list_by = dependency_analyzer->find_object_usages( metrics ).
   ENDMETHOD.
 
-  METHOD close_document.
+
+  METHOD get_full_classpath.
+    DATA path TYPE string.
+
+    TRY.
+        DATA(package) = aggregated_metrics[ modu_unit_1 = class ]-package.
+        path = package.
+        path = package_analyzer->get_parent_packages( package ).
+        result = |/root/{ path }/{ class }|.
+      CATCH cx_sy_itab_line_not_found.
+        result = system.
+    ENDTRY.
+  ENDMETHOD.
+
+
+  METHOD open_document.
+    write_element( name  = objct ).
+    write_element( name  = strng  attr = 'projectName'  value = 'ABAP' ).
+    json_writer->close_element( ).
+    write_element( name  = strng  attr = 'apiVersion'  value = '1.1' ).
     json_writer->close_element( ).
   ENDMETHOD.
 
-  METHOD close_edges.
-    json_writer->close_element( ).
-  ENDMETHOD.
 
   METHOD open_edges.
     write_element( name  = array attr = 'edges' ).
   ENDMETHOD.
 
-  METHOD close_nodes.
-    json_writer->close_element( ).
-    json_writer->close_element( ).
-    json_writer->close_element( ).
-  ENDMETHOD.
 
   METHOD open_nodes.
     write_element( name  = array attr = 'nodes' ).
@@ -188,6 +209,66 @@ CLASS zcl_i_a2cc_metrics_2_json IMPLEMENTATION.
     json_writer->close_element( ).
     write_element( name  = array attr = 'children' ).
   ENDMETHOD.
+
+
+  METHOD to_json.
+    me->analyze_dependecies = analyze_dependecies.
+    me->analyze_direct_cycles = analyze_direct_cycles.
+
+    SORT metrics.
+
+    find_object_usages( metrics ).
+    aggregated_metrics = metric_aggregator->aggregate_metrics( metrics ).
+    packages = package_analyzer->aggregate_packages( aggregated_metrics ).
+    result = convert2json( ).
+  ENDMETHOD.
+
+
+  METHOD write_edges.
+    IF analyze_dependecies = abap_true OR analyze_direct_cycles = abap_true.
+      LOOP AT object_where_used_list_by REFERENCE INTO DATA(usage).
+        LOOP AT usage->references REFERENCE INTO DATA(used_by)
+          WHERE depending_object <> usage->object_identifier.
+          write_element( name  = objct ).
+          write_element( name  = strng  attr = 'fromNodeName'  value = get_full_classpath( CONV #( used_by->depending_object ) ) ).
+          json_writer->close_element( ).
+          write_element( name  = strng  attr = 'toNodeName'  value = get_full_classpath( CONV #( usage->object_identifier ) ) ).
+          json_writer->close_element( ).
+          write_element( name  = objct attr = 'attributes' ).
+          IF analyze_dependecies = abap_true.
+            write_element( name  = numeric  attr = 'usage'  value = CONV #( used_by->number_of_usages ) ).
+            json_writer->close_element( ).
+          ENDIF.
+          IF used_by->cycle > 0 AND analyze_direct_cycles = abap_true.
+            write_element( name  = numeric  attr = 'cycle'  value = CONV #( used_by->cycle ) ).
+            json_writer->close_element( ).
+          ENDIF.
+          json_writer->close_element( ).
+          json_writer->close_element( ).
+        ENDLOOP.
+      ENDLOOP.
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD write_element.
+    json_writer->open_element( name ).
+    IF attr IS NOT INITIAL.
+      json_writer->write_attribute( name = 'name' value = attr ).
+    ENDIF.
+    IF value IS NOT INITIAL.
+      json_writer->write_value( value ).
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD write_nodes.
+    LOOP AT packages REFERENCE INTO DATA(package)
+      WHERE parent IS INITIAL.
+      write_package( package->* ).
+    ENDLOOP.
+  ENDMETHOD.
+
 
   METHOD write_node_system_outside.
     write_element( name  = objct ).
@@ -233,13 +314,6 @@ CLASS zcl_i_a2cc_metrics_2_json IMPLEMENTATION.
     json_writer->close_element( ).
   ENDMETHOD.
 
-  METHOD open_document.
-    write_element( name  = objct ).
-    write_element( name  = strng  attr = 'projectName'  value = 'ABAP' ).
-    json_writer->close_element( ).
-    write_element( name  = strng  attr = 'apiVersion'  value = '1.1' ).
-    json_writer->close_element( ).
-  ENDMETHOD.
 
   METHOD write_package.
     write_element( name  = objct ).
@@ -288,60 +362,5 @@ CLASS zcl_i_a2cc_metrics_2_json IMPLEMENTATION.
     ENDLOOP.
     json_writer->close_element( ).
     json_writer->close_element( ).
-  ENDMETHOD.
-
-  METHOD write_element.
-    json_writer->open_element( name ).
-    IF attr IS NOT INITIAL.
-      json_writer->write_attribute( name = 'name' value = attr ).
-    ENDIF.
-    IF value IS NOT INITIAL.
-      json_writer->write_value( value ).
-    ENDIF.
-  ENDMETHOD.
-
-  METHOD write_edges.
-    IF analyze_dependecies = abap_true OR analyze_direct_cycles = abap_true.
-      LOOP AT object_where_used_list_by REFERENCE INTO DATA(usage).
-        LOOP AT usage->references REFERENCE INTO DATA(used_by)
-          WHERE depending_object <> usage->object_identifier.
-          write_element( name  = objct ).
-          write_element( name  = strng  attr = 'fromNodeName'  value = get_full_classpath( CONV #( used_by->depending_object ) ) ).
-          json_writer->close_element( ).
-          write_element( name  = strng  attr = 'toNodeName'  value = get_full_classpath( CONV #( usage->object_identifier ) ) ).
-          json_writer->close_element( ).
-          IF analyze_dependecies = abap_true.
-            write_element( name  = objct attr = 'attributes' ).
-            write_element( name  = numeric  attr = 'usage'  value = CONV #( used_by->number_of_usages ) ).
-          ENDIF.
-          IF used_by->cycle > 0 AND analyze_direct_cycles = abap_true.
-            json_writer->close_element( ).
-            write_element( name  = numeric  attr = 'cycle'  value = CONV #( used_by->cycle ) ).
-          ENDIF.
-          json_writer->close_element( ).
-          json_writer->close_element( ).
-          json_writer->close_element( ).
-        ENDLOOP.
-      ENDLOOP.
-    ENDIF.
-  ENDMETHOD.
-
-  METHOD get_full_classpath.
-    DATA path TYPE string.
-
-    TRY.
-        DATA(package) = aggregated_metrics[ modu_unit_1 = class ]-package.
-        path = package.
-        path = package_analyzer->get_parent_packages( package ).
-        result = |/root/{ path }/{ class }|.
-      CATCH cx_sy_itab_line_not_found.
-        result = system.
-    ENDTRY.
-  ENDMETHOD.
-
-  METHOD find_object_usages.
-    dependency_analyzer = NEW zcl_i_a2cc_dependency_analyzer( analyze_dependecies = analyze_dependecies
-                                                              analyze_direct_cycles = analyze_direct_cycles ).
-    object_where_used_list_by = dependency_analyzer->find_object_usages( metrics ).
   ENDMETHOD.
 ENDCLASS.
