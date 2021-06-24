@@ -3,9 +3,9 @@
  <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
   <asx:values>
    <VSEOCLASS>
-    <CLSNAME>ZCL_I_A2CC_AGGREGATOR</CLSNAME>
+    <CLSNAME>ZCL_I_A2CC_DPNDNCY_ANLYZR_DEVC</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>Metrics aggregator</DESCRIPT>
+    <DESCRIPT>Dependency analyzer</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

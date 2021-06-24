@@ -1,5 +1,5 @@
 *
-* This is version 0.4.1
+* This is version 0.5.0
 *
 *The MIT License (MIT)
 *
@@ -133,12 +133,27 @@ ENDCLASS.
 START-OF-SELECTION.
   PARAMETERS varnt TYPE variant.
   PARAMETERS file TYPE localfile.
-  PARAMETERS dpndncy TYPE abap_bool AS CHECKBOX.
-  PARAMETERS cycls TYPE abap_bool AS CHECKBOX.
+
+  SELECTION-SCREEN BEGIN OF BLOCK a WITH FRAME TITLE TEXT-bld.
+    PARAMETERS agg_modl TYPE abap_bool RADIOBUTTON GROUP agg DEFAULT 'X'.
+    PARAMETERS agg_devc TYPE abap_bool RADIOBUTTON GROUP agg.
+  SELECTION-SCREEN END OF BLOCK a.
+
+  SELECTION-SCREEN BEGIN OF BLOCK d WITH FRAME TITLE TEXT-bla.
+    PARAMETERS dpndncy TYPE abap_bool RADIOBUTTON GROUP dpn DEFAULT 'X'.
+    PARAMETERS wo_dpnd TYPE abap_bool RADIOBUTTON GROUP dpn.
+    PARAMETERS cycls TYPE abap_bool RADIOBUTTON GROUP dpn.
+  SELECTION-SCREEN END OF BLOCK d.
 
   DATA(code_metrics) = NEW lcl_code_metrics( )->run( varnt ).
-  DATA(json) = NEW zcl_i_a2cc_metrics_2_json( )->to_json( metrics               = code_metrics
-                                                          analyze_dependecies   = dpndncy
-                                                          analyze_direct_cycles = cycls ).
+
+  DATA(abap2codecharta) = zcl_i_a2cc_factory=>create( COND #( WHEN agg_devc = abap_true
+                                                              THEN zcl_i_a2cc_factory=>aggregation_levels-package
+                                                              ELSE zcl_i_a2cc_factory=>aggregation_levels-class ) ).
+
+  DATA(json) = abap2codecharta->to_json( metrics               = code_metrics
+                                         analyze_dependecies   = dpndncy
+                                         analyze_direct_cycles = cycls ).
+
   NEW lcl_file_output( )->write_file( file_name = file
                                       json      = json ).

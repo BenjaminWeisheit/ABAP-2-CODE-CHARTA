@@ -1,5 +1,5 @@
 *
-* This is version 0.4.1
+* This is version 0.1.0
 *
 *The MIT License (MIT)
 *
@@ -21,24 +21,23 @@
 *AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 *LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 *OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-*SOFTWARE.CLASS zcl_i_metrics_to_json DEFINITION
+*SOFTWARE.
 CLASS zcl_i_a2cc_metrics_2_json DEFINITION
   PUBLIC
   FINAL
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-    METHODS constructor.
-    METHODS
-      to_json
-        IMPORTING
-          VALUE(metrics)     TYPE ztti_a2cc_code_metrics
-          analyze_dependecies   TYPE abap_bool
-          analyze_direct_cycles TYPE abap_bool
-        RETURNING
-          VALUE(result)         TYPE string.
+    INTERFACES zif_i_a2cc_metrics_2_json.
+    METHODS constructor
+      IMPORTING
+        json_writer         TYPE REF TO if_sxml_writer
+        package_analyzer    TYPE REF TO zif_i_a2cc_package_analyzer
+        dependency_analyzer TYPE REF TO zif_i_a2cc_dependency_analyzer
+        metric_aggregator   TYPE REF TO zif_i_a2cc_aggregator  .
 
-  CONSTANTS system TYPE string VALUE `/root/SYSTEM/OUTSIDE`.
+
+    CONSTANTS system TYPE string VALUE `/root/SYSTEM/OUTSIDE`.
 
   PRIVATE SECTION.
     CONSTANTS numeric TYPE string VALUE 'num' ##NO_TEXT.
@@ -46,10 +45,10 @@ CLASS zcl_i_a2cc_metrics_2_json DEFINITION
     CONSTANTS array TYPE string VALUE 'array' ##NO_TEXT.
     CONSTANTS objct TYPE string VALUE 'object' ##NO_TEXT.
     DATA object_where_used_list_by TYPE zif_i_a2cc_where_used=>where_used_list.
-    DATA: analyze_dependecies   TYPE abap_bool,
-          analyze_direct_cycles TYPE abap_bool.
+    DATA analyze_dependecies   TYPE abap_bool.
+    DATA analyze_direct_cycles TYPE abap_bool.
 
-data package_analyzer type ref to ZIF_I_A2CC_PACKAGE_ANALYZER.
+
     CLASS-DATA json_writer TYPE REF TO if_sxml_writer.
 
     METHODS write_package
@@ -101,14 +100,15 @@ data package_analyzer type ref to ZIF_I_A2CC_PACKAGE_ANALYZER.
                                           value TYPE string OPTIONAL
                                 RAISING   cx_sxml_state_error.
     DATA: aggregated_metrics  TYPE ztti_a2cc_code_metrics,
-          packages            TYPE ztti_a2cc_packages,
+          package_analyzer    TYPE REF TO zif_i_a2cc_package_analyzer,
           dependency_analyzer TYPE REF TO zif_i_a2cc_dependency_analyzer,
-          metric_aggregator type ref to zif_i_a2cc_aggregator.
+          metric_aggregator   TYPE REF TO zif_i_a2cc_aggregator,
+          packages            TYPE ztti_a2cc_packages.
 ENDCLASS.
 
 
 
-CLASS ZCL_I_A2CC_METRICS_2_JSON IMPLEMENTATION.
+CLASS zcl_i_a2cc_metrics_2_json IMPLEMENTATION.
 
 
   METHOD close_document.
@@ -129,12 +129,10 @@ CLASS ZCL_I_A2CC_METRICS_2_JSON IMPLEMENTATION.
 
 
   METHOD constructor.
-    json_writer =
-      CAST if_sxml_writer(
-             cl_sxml_string_writer=>create(
-               type = if_sxml=>co_xt_json  ) ).
-               package_analyzer = new ZCL_I_A2CC_PACKAGE_ANALYZER( ).
-               metric_aggregator = new Zcl_I_A2CC_AGGREGATOR( ).
+    me->json_writer = json_writer.
+    me->package_analyzer = package_analyzer.
+    me->dependency_analyzer = dependency_analyzer.
+    me->metric_aggregator = metric_aggregator.
   ENDMETHOD.
 
 
@@ -162,9 +160,9 @@ CLASS ZCL_I_A2CC_METRICS_2_JSON IMPLEMENTATION.
 
 
   METHOD find_object_usages.
-    dependency_analyzer = NEW zcl_i_a2cc_dependency_analyzer( analyze_dependecies = analyze_dependecies
-                                                              analyze_direct_cycles = analyze_direct_cycles ).
-    object_where_used_list_by = dependency_analyzer->find_object_usages( metrics ).
+    object_where_used_list_by = dependency_analyzer->find_object_usages( metrics = metrics
+                                                                         analyze_dependecies = analyze_dependecies
+                                                                         analyze_direct_cycles = analyze_direct_cycles ).
   ENDMETHOD.
 
 
@@ -211,7 +209,7 @@ CLASS ZCL_I_A2CC_METRICS_2_JSON IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD to_json.
+  METHOD zif_i_a2cc_metrics_2_json~to_json.
     me->analyze_dependecies = analyze_dependecies.
     me->analyze_direct_cycles = analyze_direct_cycles.
 
@@ -342,11 +340,15 @@ CLASS ZCL_I_A2CC_METRICS_2_JSON IMPLEMENTATION.
       json_writer->close_element( ).
       write_element( name  = numeric  attr = 'AvgStatementsPerMethod'  value = CONV #( class->average_nos_per_method ) ).
       json_writer->close_element( ).
-      write_element( name  = numeric  attr = 'NumberOfChanges'  value = CONV #( class->diff_vers ) ).
+      write_element( name  = numeric  attr = 'NumberOfChanges'  value = CONV #( class->diff_vers ) )..
       json_writer->close_element( ).
-      write_element( name  = numeric  attr = 'ComplexityOfConditions'  value = CONV #( class->complexity_of_conditions ) ).
+      write_element( name  = numeric  attr = 'DecissionDepth'  value = CONV #( class->decission_depth_complexity ) ).
       json_writer->close_element( ).
-      write_element( name  = numeric  attr = 'DecissionDepth'  value = CONV #( class->decission_depht ) ).
+      write_element( name  = numeric  attr = 'DbAccesses'  value = CONV #( class->db_access_statements ) ).
+      json_writer->close_element( ).
+      write_element( name  = numeric  attr = 'Complexity'  value = CONV #( class->cyclomatic_complexity ) ).
+      json_writer->close_element( ).
+      write_element( name  = numeric  attr = 'AvgComplexityPerMethod'  value = CONV #( class->cyclomatic_complexity_avg ) ).
       json_writer->close_element( ).
 
       json_writer->close_element( ).

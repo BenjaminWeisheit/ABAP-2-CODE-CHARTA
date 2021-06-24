@@ -13,29 +13,59 @@
    </PROGDIR>
    <TPOOL>
     <item>
+     <ID>I</ID>
+     <KEY>BLA</KEY>
+     <ENTRY>Abhängigkeiten</ENTRY>
+     <LENGTH>22</LENGTH>
+    </item>
+    <item>
+     <ID>I</ID>
+     <KEY>BLD</KEY>
+     <ENTRY>Aggregationsebene</ENTRY>
+     <LENGTH>27</LENGTH>
+    </item>
+    <item>
+     <ID>S</ID>
+     <KEY>AGG_DEVC</KEY>
+     <ENTRY>Paket</ENTRY>
+     <LENGTH>38</LENGTH>
+    </item>
+    <item>
+     <ID>S</ID>
+     <KEY>AGG_MODL</KEY>
+     <ENTRY>Modul</ENTRY>
+     <LENGTH>38</LENGTH>
+    </item>
+    <item>
      <ID>S</ID>
      <KEY>CYCLS</KEY>
-     <ENTRY>Zyklische Abhängigkeit. darst.</ENTRY>
+     <ENTRY>Nur direkte Zyklen</ENTRY>
      <LENGTH>38</LENGTH>
     </item>
     <item>
      <ID>S</ID>
      <KEY>DPNDNCY</KEY>
-     <ENTRY>Abhängigkeiten darstellen</ENTRY>
+     <ENTRY>Alle</ENTRY>
+     <LENGTH>38</LENGTH>
+    </item>
+    <item>
+     <ID>S</ID>
+     <KEY>WO_DPND</KEY>
+     <ENTRY>Ohne</ENTRY>
      <LENGTH>38</LENGTH>
     </item>
     <item>
      <ID>S</ID>
      <KEY>FILE</KEY>
      <ENTRY>.</ENTRY>
-     <LENGTH>9</LENGTH>
+     <LENGTH>22</LENGTH>
      <SPLIT>D</SPLIT>
     </item>
     <item>
      <ID>S</ID>
      <KEY>VARNT</KEY>
      <ENTRY>.</ENTRY>
-     <LENGTH>9</LENGTH>
+     <LENGTH>16</LENGTH>
      <SPLIT>D</SPLIT>
     </item>
    </TPOOL>

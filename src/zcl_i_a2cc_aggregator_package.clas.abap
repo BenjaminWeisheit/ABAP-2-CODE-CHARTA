@@ -1,4 +1,4 @@
-CLASS zcl_i_a2cc_aggregator DEFINITION
+CLASS zcl_i_a2cc_aggregator_package DEFINITION
   PUBLIC
   FINAL
   CREATE PUBLIC .
@@ -8,7 +8,7 @@ CLASS zcl_i_a2cc_aggregator DEFINITION
   PRIVATE SECTION.
 ENDCLASS.
 
-CLASS zcl_i_a2cc_aggregator IMPLEMENTATION.
+CLASS zcl_i_a2cc_aggregator_package IMPLEMENTATION.
   METHOD zif_i_a2cc_aggregator~aggregate_metrics.
     DATA aggregated_metric TYPE zsi_a2cc_code_metrics.
 
@@ -16,7 +16,7 @@ CLASS zcl_i_a2cc_aggregator IMPLEMENTATION.
       aggregated_metric-component_to_be_changed =  metric->component_to_be_changed.
       aggregated_metric-package     =  metric->package.
       aggregated_metric-category    =  metric->category.
-      aggregated_metric-modu_unit_1 =  metric->modu_unit_1.
+      aggregated_metric-modu_unit_1 =  metric->package.
       aggregated_metric-loc        = aggregated_metric-loc        + metric->loc       .
       IF metric->nos >= 2.
         aggregated_metric-nos        = aggregated_metric-nos        + metric->nos - 2   . "DO not Consider METHOD/ENDMETHOD
@@ -51,10 +51,24 @@ CLASS zcl_i_a2cc_aggregator IMPLEMENTATION.
       aggregated_metric-mod_call   = aggregated_metric-mod_call   + metric->mod_call  .
       aggregated_metric-mod_bra    = aggregated_metric-mod_bra    + metric->mod_bra   .
       aggregated_metric-number_of_methods = aggregated_metric-number_of_methods + 1.
-      AT END OF modu_unit_1.
+      AT END OF package.
         aggregated_metric-average_nos_per_method = aggregated_metric-nos / aggregated_metric-number_of_methods.
-        aggregated_metric-complexity_of_conditions = aggregated_metric-mcc_com / aggregated_metric-number_of_methods.
-        aggregated_metric-decission_depht = aggregated_metric-dd_total / aggregated_metric-number_of_methods.
+        aggregated_metric-decission_depth_complexity = aggregated_metric-dd_total.
+        aggregated_metric-db_access_statements = aggregated_metric-stmts_sl +
+                                                 aggregated_metric-stmts_ins +
+                                                 aggregated_metric-stmts_mod +
+                                                 aggregated_metric-stmts_del.
+
+        aggregated_metric-cyclomatic_complexity = aggregated_metric-stmts_i +
+                                                 aggregated_metric-stmts_e +
+                                                 aggregated_metric-stmts_ei +
+                                                 aggregated_metric-stmts_d +
+                                                 aggregated_metric-stmts_w +
+                                                 aggregated_metric-stmts_l +
+                                                 aggregated_metric-stmts_ca +
+                                                 aggregated_metric-stmts_wh.
+        aggregated_metric-cyclomatic_complexity_avg = aggregated_metric-cyclomatic_complexity / aggregated_metric-number_of_methods.
+
         APPEND aggregated_metric TO result.
         CLEAR aggregated_metric.
       ENDAT.
