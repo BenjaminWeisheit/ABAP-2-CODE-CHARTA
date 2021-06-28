@@ -67,7 +67,8 @@ CLASS zcl_i_a2cc_dpndncy_anlyzr_clas IMPLEMENTATION.
       LOOP AT object_where_used->references REFERENCE INTO DATA(reference).
         DATA(line_index) = sy-tabix.
         TRY.
-            DATA(back_refenrence) = object_where_used_list_by[ object_identifier = reference->depending_object ]-references[ depending_object = object_where_used->object_identifier ].
+            data(references) = object_where_used_list_by[ object_identifier = reference->depending_object object_type = reference->depending_type ]-references.
+            DATA(back_refenrence) = references[ depending_object = object_where_used->object_identifier depending_type = object_where_used->object_type ].
             reference->cycle = 1.
           CATCH cx_sy_itab_line_not_found.
             DELETE TABLE object_where_used->references FROM reference->*.
@@ -82,17 +83,17 @@ CLASS zcl_i_a2cc_dpndncy_anlyzr_clas IMPLEMENTATION.
 
   METHOD collect_object_where_used_list.
     TRY.
-        DATA(references) = REF #( me->object_where_used_list_by[ object_identifier = metric->modu_unit_1 ]-references ).
+        DATA(references) = REF #( me->object_where_used_list_by[ object_identifier = metric->modu_unit_1 object_type = metric->category ]-references ).
         LOOP AT depending_objects REFERENCE INTO DATA(depending_object).
-          IF line_exists( references->*[ depending_object = depending_object->depending_object ] ).
-            ASSIGN references->*[ depending_object = depending_object->depending_object ] TO FIELD-SYMBOL(<existing_reference>).
+          IF line_exists( references->*[ depending_object = depending_object->depending_object depending_type = depending_object->depending_type ] ).
+            ASSIGN references->*[ depending_object = depending_object->depending_object depending_type = depending_object->depending_type ] TO FIELD-SYMBOL(<existing_reference>).
             <existing_reference>-number_of_usages = <existing_reference>-number_of_usages + 1.
           ELSE.
             INSERT depending_object->* INTO TABLE references->*.
           ENDIF.
         ENDLOOP.
       CATCH cx_sy_itab_line_not_found.
-        INSERT VALUE #( object_identifier = metric->modu_unit_1 references = depending_objects ) INTO TABLE object_where_used_list_by.
+        INSERT VALUE #( object_identifier = metric->modu_unit_1 object_type = metric->category references = depending_objects ) INTO TABLE object_where_used_list_by.
     ENDTRY.
   ENDMETHOD.
 ENDCLASS.

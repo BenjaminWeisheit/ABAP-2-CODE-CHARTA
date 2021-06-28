@@ -62,7 +62,8 @@ CLASS zcl_i_a2cc_metrics_2_json DEFINITION
     METHODS write_edges.
     METHODS get_full_classpath
       IMPORTING
-        class         TYPE classname
+        object        TYPE classname
+        type          TYPE trobjtype
       RETURNING
         VALUE(result) TYPE string.
     METHODS open_document
@@ -170,10 +171,10 @@ CLASS zcl_i_a2cc_metrics_2_json IMPLEMENTATION.
     DATA path TYPE string.
 
     TRY.
-        DATA(package) = aggregated_metrics[ modu_unit_1 = class ]-package.
+        DATA(package) = aggregated_metrics[ modu_unit_1 = object ]-package.
         path = package.
         path = package_analyzer->get_parent_packages( package ).
-        result = |/root/{ path }/{ class }|.
+        result = |/root/{ path }/{ object }.{ type }|.
       CATCH cx_sy_itab_line_not_found.
         result = system.
     ENDTRY.
@@ -228,9 +229,9 @@ CLASS zcl_i_a2cc_metrics_2_json IMPLEMENTATION.
         LOOP AT usage->references REFERENCE INTO DATA(used_by)
           WHERE depending_object <> usage->object_identifier.
           write_element( name  = objct ).
-          write_element( name  = strng  attr = 'fromNodeName'  value = get_full_classpath( CONV #( used_by->depending_object ) ) ).
+          write_element( name  = strng  attr = 'fromNodeName'  value = get_full_classpath( object = CONV #( used_by->depending_object ) type = used_by->depending_type ) ).
           json_writer->close_element( ).
-          write_element( name  = strng  attr = 'toNodeName'  value = get_full_classpath( CONV #( usage->object_identifier ) ) ).
+          write_element( name  = strng  attr = 'toNodeName'  value = get_full_classpath( object = CONV #( usage->object_identifier ) type = usage->object_type ) ).
           json_writer->close_element( ).
           write_element( name  = objct attr = 'attributes' ).
           IF analyze_dependecies = abap_true.

@@ -8,6 +8,8 @@ CLASS zcl_i_a2cc_where_used_provider DEFINITION
     METHODS constructor.
   PRIVATE SECTION.
 
+
+
     TYPES: BEGIN OF object_where_used_provider,
              objecttype TYPE zif_i_A2CC_where_used_provider=>objecttype,
              subtype    TYPE zif_i_A2CC_where_used_provider=>subtype,
