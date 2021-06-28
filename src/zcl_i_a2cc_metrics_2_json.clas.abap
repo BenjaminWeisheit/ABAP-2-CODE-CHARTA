@@ -327,7 +327,7 @@ CLASS zcl_i_a2cc_metrics_2_json IMPLEMENTATION.
     LOOP AT aggregated_metrics REFERENCE INTO DATA(class)
       WHERE package = package-package.
       write_element( name  = objct ).
-      write_element( name  = strng  attr = 'name'  value = CONV #( class->modu_unit_1 ) ).
+      write_element( name  = strng  attr = 'name'  value = |{ class->modu_unit_1 }.{ class->category }|  ).
       json_writer->close_element( ).
       write_element( name  = strng  attr = 'type'  value = 'File' ).
       json_writer->close_element( ).
