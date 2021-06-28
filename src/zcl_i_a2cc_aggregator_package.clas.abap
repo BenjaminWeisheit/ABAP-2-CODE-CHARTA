@@ -15,7 +15,7 @@ CLASS zcl_i_a2cc_aggregator_package IMPLEMENTATION.
     LOOP AT metrics REFERENCE INTO DATA(metric).
       aggregated_metric-component_to_be_changed =  metric->component_to_be_changed.
       aggregated_metric-package     =  metric->package.
-      aggregated_metric-category    =  metric->category.
+      aggregated_metric-category    =  'DEVC'.
       aggregated_metric-modu_unit_1 =  metric->package.
       aggregated_metric-loc        = aggregated_metric-loc        + metric->loc       .
       IF metric->nos >= 2.
