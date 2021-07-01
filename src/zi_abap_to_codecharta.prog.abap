@@ -1,5 +1,5 @@
 *
-* This is version 0.5.0
+* This is version 0.5.3
 *
 *The MIT License (MIT)
 *
@@ -76,6 +76,57 @@ CLASS lcl_code_metrics IMPLEMENTATION.
   ENDMETHOD.
 ENDCLASS.
 
+CLASS lcl_input_screen DEFINITION.
+  PUBLIC SECTION.
+    METHODS check_file_directory
+      IMPORTING
+        file TYPE localfile.
+    METHODS check_variant
+      IMPORTING
+        variant TYPE variant.
+ENDCLASS.
+
+CLASS lcl_input_screen IMPLEMENTATION.
+  METHOD check_file_directory.
+    DATA directory TYPE localfile.
+    CALL FUNCTION 'LIST_SPLIT_PATH'
+      EXPORTING
+        filename = file
+      IMPORTING
+        pathname = directory.
+    CALL FUNCTION 'PFL_CHECK_DIRECTORY'
+      EXPORTING
+        directory_long              = directory
+      EXCEPTIONS
+        pfl_dir_not_exist           = 1
+        pfl_permission_denied       = 2
+        pfl_cant_build_dataset_name = 3
+        pfl_file_not_exist          = 4
+        pfl_authorization_missing   = 5
+        OTHERS                      = 6.
+    IF sy-subrc <> 0.
+      CASE sy-subrc.
+        WHEN 1.
+          MESSAGE 'Directory does not exist on the appserver'(002) TYPE 'E'.
+        WHEN 2 OR 5.
+          MESSAGE 'No permission to the directory on the appserver'(003) TYPE 'E'.
+        WHEN OTHERS.
+          MESSAGE ID sy-msgid TYPE 'E' NUMBER sy-msgno
+                     WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+      ENDCASE.
+    ENDIF.
+  ENDMETHOD.
+
+  METHOD check_variant.
+    SELECT SINGLE variant INTO @DATA(exists) FROM varid
+        WHERE report EQ '/SDF/CD_CUSTOM_CODE_METRIC'
+          AND variant EQ @variant.
+    IF sy-subrc IS NOT INITIAL.
+      MESSAGE 'Variant not defined for Code Metrics in tx /SDF/CD_CCA'(001) TYPE 'E'.
+    ENDIF.
+  ENDMETHOD.
+ENDCLASS.
+
 CLASS lcl_file_output DEFINITION.
   PUBLIC SECTION.
     METHODS write_file
@@ -130,21 +181,26 @@ CLASS lcl_file_output IMPLEMENTATION.
   ENDMETHOD.
 ENDCLASS.
 
+PARAMETERS varnt TYPE variant.
+PARAMETERS file TYPE localfile.
+
+SELECTION-SCREEN BEGIN OF BLOCK d WITH FRAME TITLE TEXT-bld.
+PARAMETERS agg_modl TYPE abap_bool RADIOBUTTON GROUP agg DEFAULT 'X'.
+PARAMETERS agg_devc TYPE abap_bool RADIOBUTTON GROUP agg.
+SELECTION-SCREEN END OF BLOCK d.
+
+SELECTION-SCREEN BEGIN OF BLOCK a WITH FRAME TITLE TEXT-bla.
+PARAMETERS dpndncy TYPE abap_bool RADIOBUTTON GROUP dpn DEFAULT 'X'.
+PARAMETERS wo_dpnd TYPE abap_bool RADIOBUTTON GROUP dpn.
+PARAMETERS cycls TYPE abap_bool RADIOBUTTON GROUP dpn.
+SELECTION-SCREEN END OF BLOCK a.
+
+AT SELECTION-SCREEN.
+  DATA(input_screen) = NEW lcl_input_screen( ).
+  input_screen->check_file_directory( file ).
+  input_screen->check_variant( varnt ).
+
 START-OF-SELECTION.
-  PARAMETERS varnt TYPE variant.
-  PARAMETERS file TYPE localfile.
-
-  SELECTION-SCREEN BEGIN OF BLOCK a WITH FRAME TITLE TEXT-bld.
-    PARAMETERS agg_modl TYPE abap_bool RADIOBUTTON GROUP agg DEFAULT 'X'.
-    PARAMETERS agg_devc TYPE abap_bool RADIOBUTTON GROUP agg.
-  SELECTION-SCREEN END OF BLOCK a.
-
-  SELECTION-SCREEN BEGIN OF BLOCK d WITH FRAME TITLE TEXT-bla.
-    PARAMETERS dpndncy TYPE abap_bool RADIOBUTTON GROUP dpn DEFAULT 'X'.
-    PARAMETERS wo_dpnd TYPE abap_bool RADIOBUTTON GROUP dpn.
-    PARAMETERS cycls TYPE abap_bool RADIOBUTTON GROUP dpn.
-  SELECTION-SCREEN END OF BLOCK d.
-
   DATA(code_metrics) = NEW lcl_code_metrics( )->run( varnt ).
 
   DATA(abap2codecharta) = zcl_i_a2cc_factory=>create( COND #( WHEN agg_devc = abap_true
